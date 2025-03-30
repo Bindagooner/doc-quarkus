@@ -8,6 +8,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -53,8 +54,8 @@ public class DocumentService {
         log.info("saved docuemnt. ID: {}", document.getId());
     }
 
-    public Document getDocumentById(UUID id) {
+    public Optional<Document> getDocumentById(UUID id) {
         log.info("Getting document by id: {}", id);
-        return documentRepository.findById(id);
+        return Optional.ofNullable(documentRepository.findById(id));
     }
 }
