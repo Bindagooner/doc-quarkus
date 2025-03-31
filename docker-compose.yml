@@ -14,3 +14,11 @@ services:
     command:
       - start-dev
       - --import-realm
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: doc-db
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"

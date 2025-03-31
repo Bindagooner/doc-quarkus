@@ -1,9 +1,13 @@
 package com.example.grpc;
 
+import com.example.auth.JwtServerInterceptor;
 import com.example.auth.Roles;
 import com.example.auth.SecurityContext;
+import com.example.repo.DocumentRepository;
 import com.example.service.DocumentService;
 import io.quarkus.grpc.GrpcService;
+import io.quarkus.grpc.RegisterInterceptor;
+import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.smallrye.mutiny.Uni;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
@@ -14,33 +18,34 @@ import java.util.UUID;
 
 @Slf4j
 @GrpcService
+//@RegisterInterceptor(JwtServerInterceptor.class)
 public class DocumentProcessorService implements DocumentProcessor {
 
     @Inject
-    DocumentService documentService;
+    DocumentRepository documentRepository;
 
     @Inject
     SecurityContext securityContext;
 
-    @RolesAllowed({Roles.ADMIN, Roles.VIEWER})
+    @RolesAllowed({Roles.ADMIN})
     @Override
+    @WithTransaction
     public Uni<DocumentResponse> process(DocumentRequest request) {
         UUID id = UUID.fromString(request.getDocumentId());
 
-        return Uni.createFrom()
-                .item(() -> documentService.getDocumentById(id))
-                .onItem().transform(optionalDoc -> {
-                    if (optionalDoc.isEmpty()) {
+
+        return documentRepository.findById(id)
+                .onItem().transform(doc -> {
+                    if (doc == null) {
                         return DocumentResponse.newBuilder()
                                 .setDocumentId(request.getDocumentId())
                                 .setStatus("NOT_FOUND")
                                 .build();
                     }
 
-                    com.example.model.Document doc = optionalDoc.get();
-                    if (!securityContext.hasAccessToTenant(doc.getTenantId())) {
-                        throw new SecurityException("Access denied: Invalid tenant");
-                    }
+//                    if (!securityContext.hasAccessToTenant(doc.getTenantId())) {
+//                        throw new SecurityException("Access denied: Invalid tenant");
+//                    }
 
                     return DocumentResponse.newBuilder()
                             .setDocumentId(doc.getId().toString())
@@ -54,6 +59,7 @@ public class DocumentProcessorService implements DocumentProcessor {
                             .setStatus("ERROR")
                             .build();
                 });
+
     }
 }
 
