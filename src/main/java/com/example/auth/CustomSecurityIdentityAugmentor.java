@@ -36,9 +36,10 @@ public class CustomSecurityIdentityAugmentor implements SecurityIdentityAugmento
                         .collect(Collectors.toSet()))
                 .orElse(Collections.emptySet());
 
-        // Build new identity with custom roles
+
         QuarkusSecurityIdentity.Builder builder = QuarkusSecurityIdentity.builder(identity);
         roles.forEach(builder::addRole);
+        builder.addAttribute("tenantId",  jwt.getClaim("tenant_id"));
 
         return Uni.createFrom().item(builder.build());
     }

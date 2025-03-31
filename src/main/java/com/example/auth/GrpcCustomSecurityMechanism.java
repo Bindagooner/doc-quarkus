@@ -5,6 +5,7 @@ import io.quarkus.grpc.auth.GrpcSecurityMechanism;
 import io.quarkus.security.credential.TokenCredential;
 import io.quarkus.security.identity.request.AuthenticationRequest;
 import io.quarkus.security.identity.request.TokenAuthenticationRequest;
+import io.quarkus.smallrye.jwt.runtime.auth.JsonWebTokenCredential;
 import jakarta.inject.Singleton;
 
 
@@ -27,10 +28,10 @@ public class GrpcCustomSecurityMechanism implements GrpcSecurityMechanism {
 
     @Override
     public AuthenticationRequest createAuthenticationRequest(Metadata metadata) {
-        String token = metadata.get(AUTHORIZATION_HEADER);//.substring(BEARER_PREFIX.length());
+        String token = metadata.get(AUTHORIZATION_HEADER).substring(BEARER_PREFIX.length());
 
         TokenAuthenticationRequest request = new TokenAuthenticationRequest(
-               new TokenCredential(token, "bearer"));
+               new JsonWebTokenCredential(token));
         return request;
     }
 

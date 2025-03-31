@@ -3,9 +3,12 @@ package com.example.service;
 import com.example.model.Document;
 import com.example.repo.DocumentRepository;
 import io.quarkus.hibernate.reactive.panache.Panache;
+import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.Context;
 import io.vertx.core.Vertx;
+import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
@@ -24,21 +27,25 @@ public class DataInitializer {
     @Inject
     Mutiny.SessionFactory sessionFactory;
 
-    @Inject
-    Vertx vertx;
 
-    void onStart(@Observes StartupEvent ev) {
-        vertx.runOnContext(v -> {
+    @Inject
+    Vertx context;
+
+    void onStart(@Observes @Priority(value = Integer.MAX_VALUE) StartupEvent ev) {
+        context.runOnContext(v -> {
             log.info("Initializing test data");
             initData()
                     .subscribe().with(
                             success -> log.info("Test data initialized successfully"),
                             error -> log.error("Error initializing test data", error)
                     );
+
         });
+
     }
 
-    private Uni<Void> initData() {
+    @WithTransaction
+    protected Uni<Void> initData() {
 
         return documentRepository.count()
                 .chain(count -> {
@@ -63,7 +70,7 @@ public class DataInitializer {
                 .id(UUID.fromString("a914e95f-483a-45dc-bee4-dab2ce4ecd1f"))
                 .title("Test Document 2")
                 .content("This is a test document 2")
-                .tenantId("tenant-1")
+                .tenantId("tenant-2")
                 .build();
 
         return Panache.withTransaction(() ->

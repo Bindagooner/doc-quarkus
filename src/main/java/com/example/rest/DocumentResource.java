@@ -3,7 +3,6 @@ package com.example.rest;
 import com.example.auth.ErrorResponse;
 import com.example.auth.Roles;
 import com.example.auth.SecurityContext;
-import com.example.auth.TenantSecured;
 import com.example.model.Document;
 import com.example.repo.DocumentRepository;
 import com.example.service.DocumentService;
@@ -35,7 +34,6 @@ public class DocumentResource {
     @GET
     @Path("/{id}")
     @RolesAllowed({Roles.ADMIN, Roles.VIEWER})
-    @TenantSecured
     public Uni<Document> getDocumentById(@PathParam("id") UUID id) {
 
         return documentService.getDocumentById(id)
@@ -63,11 +61,11 @@ public class DocumentResource {
                     log.error("Error saving document", throwable);
                     if (throwable instanceof SecurityException) {
                         return Response.status(Response.Status.FORBIDDEN)
-                                .entity(new ErrorResponse("403", "Access denied: " + throwable.getMessage()))
+                                .entity(new ErrorResponse(Response.Status.FORBIDDEN.getReasonPhrase(), "Access denied: " + throwable.getMessage()))
                                 .build();
                     }
                     return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                            .entity(new ErrorResponse("500", "Error saving document"))
+                            .entity(new ErrorResponse(Response.Status.INTERNAL_SERVER_ERROR.getReasonPhrase(), "Error saving document"))
                             .build();
                 });
     }

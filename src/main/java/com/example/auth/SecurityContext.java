@@ -1,30 +1,29 @@
 package com.example.auth;
 
 
+import io.quarkus.security.identity.CurrentIdentityAssociation;
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.json.JsonArray;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonString;
-import org.eclipse.microprofile.jwt.JsonWebToken;
-
-import java.util.Collections;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static com.example.auth.Roles.ADMIN;
 
 @ApplicationScoped
 public class SecurityContext {
-    @Inject
-    JsonWebToken jwt;
 
-    public String getCurrentTenantId() {
-        return jwt.getClaim("tenant_id");
-    }
+    @Inject
+    private CurrentIdentityAssociation currentIdentityAssociation;
+
 
     public boolean hasAccessToTenant(String tenantId) {
-        return getCurrentTenantId().equals(tenantId);
+        var tenantId1 = currentIdentityAssociation.getIdentity().getAttribute("tenantId");
+        return tenantId.equals(tenantId1);
+    }
+
+    public Uni<Boolean> hasAccessToTenantAsync(String tenantId) {
+        return currentIdentityAssociation.getDeferredIdentity()
+                .onItem().transform(identity -> {
+                    var tenantId1 = identity.getAttribute("tenantId");
+                    return tenantId.equals(tenantId1);
+                });
     }
 
 }
